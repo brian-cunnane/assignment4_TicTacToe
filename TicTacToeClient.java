@@ -129,6 +129,17 @@ public class TicTacToeClient extends JApplet implements Runnable {
          displayMessage( "Valid move, please wait.\n" );
          setMark( currentSquare, myMark );
       }
+      else if (message.equals("X wins") || message.equals("O wins")){
+         displayMessage("You Win!\n");
+         setMark(currentSquare, myMark);
+      }
+      else if (message.equals("Draw")){
+
+         setMark(currentSquare, myMark);
+         displayMessage("Stalemate\n");
+         myTurn = false;
+
+      }
 
       // invalid move occurred
       else if ( message.equals( "Invalid move, try again" ) ) {
@@ -146,7 +157,7 @@ public class TicTacToeClient extends JApplet implements Runnable {
             int column = location % 3;
 
             setMark(  board[ row ][ column ], 
-               ( myMark == X_MARK ? O_MARK : X_MARK ) );                  
+               ( myMark == X_MARK ? O_MARK : X_MARK ) );
             displayMessage( "Opponent moved. Your turn.\n" );
             myTurn = true;
 

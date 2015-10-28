@@ -1,5 +1,7 @@
 // Fig. 18.8: TicTacToeServer.java
 // This class maintains a game of Tic-Tac-Toe for two client applets.
+import com.sun.xml.internal.bind.v2.TODO;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.net.*;
@@ -16,6 +18,7 @@ public class TicTacToeServer extends JFrame {
     private final char X_MARK = 'X', O_MARK = 'O';
 
     public int count = 0;
+    public boolean full = false;
 
     // set up tic-tac-toe server and GUI that displays messages
     public TicTacToeServer()
@@ -117,7 +120,7 @@ public class TicTacToeServer extends JFrame {
 
         // if location not occupied, make move
         if ( !isOccupied( location )) {
-
+            count++;
             // set move in board array
             board[ location ] = currentPlayer == PLAYER_X ? X_MARK : O_MARK;
 
@@ -128,7 +131,7 @@ public class TicTacToeServer extends JFrame {
             players[ currentPlayer ].otherPlayerMoved( location );
 
             notify(); // tell waiting player to continue
-            count++;
+
             // tell player that made move that the move was valid
             return true;
         }
@@ -151,8 +154,13 @@ public class TicTacToeServer extends JFrame {
     // place code in this method to determine whether game over
     public boolean isGameOver()
     {
-        if(count >= 9 || checkLocations())
+        if(count >= 9){
+            full = true;
             return true;
+        }
+        else if(checkLocations()){
+            return true;
+        }
         else
             return false;
 
@@ -227,8 +235,21 @@ public class TicTacToeServer extends JFrame {
         {
             // send message indicating move
             try {
-                output.writeUTF( "Opponent moved" );
-                output.writeInt( location );
+                if(isGameOver()) {
+                    if(count >=9){
+                        displayMessage("\nlocation: " + location);
+                        output.writeUTF("draw1");
+                        output.writeInt(location);
+                    }
+                    else {
+                        output.writeUTF("Game over1");
+                        output.writeInt(location);
+                    }
+                }
+                else {
+                    output.writeUTF("Opponent moved");
+                    output.writeInt(location);
+                }
             }
 
             // process problems sending message
@@ -282,17 +303,38 @@ public class TicTacToeServer extends JFrame {
 
                     // check for valid move
                     if ( validateAndMove( location, playerNumber ) ) {
-                        displayMessage( "\nlocation: " + location );
-                        output.writeUTF( "Valid move." );
+                        displayMessage("\nCount: "+count);
+                        if(checkLocations()) //check for win
+                        {
+                            displayMessage("\nlocation: " + location);
+                            output.writeUTF("Valid move. \nYou win");
+                        }
+                        else if(count >=9){ //check for draw
+                            displayMessage("\nlocation: " + location);
+                            output.writeUTF("draw");
+                            output.writeInt(location);
+                        }
+
+                        else //display move
+                        {
+                            displayMessage("\nlocation: " + location);
+                            output.writeUTF("Valid move.");
+                        }
                     }
                     else
                         output.writeUTF( "Invalid move, try again" );
                 }
-                output.writeUTF("GAME OVER" + currentPlayer + " wins!");
-                notify();
-                output.writeUTF("GAME OVER" + currentPlayer + " wins!");
-
-                connection.close(); // close connection to client
+                if(isGameOver()){
+                    String message = input.readUTF();
+                    displayMessage("\n" + message);
+                    //TODO change player before sending message
+                   // currentPlayer = ( currentPlayer + 1 ) % 2;
+                    //notify(); // tell waiting player to continue
+                    if(message.equals("reset")){
+                        output.writeUTF(message);
+                    }
+                }
+                //connection.close(); // close connection to client
 
             } // end try
 
